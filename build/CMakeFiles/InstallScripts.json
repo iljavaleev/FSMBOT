@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/Users/iljavaleev/Dev/FSMBOT/build/cmake_install.cmake",
-		"/Users/iljavaleev/Dev/FSMBOT/build/bot/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
