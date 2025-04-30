@@ -1,0 +1,1 @@
+/usr/bin/g++  -Wall -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names -L/opt/homebrew/opt/curl/lib CMakeFiles/fsm.dir/fsm.cc.o -o fsm  bot/libbot.a /usr/local/lib/libTgBot.a /opt/homebrew/lib/libpqxx.dylib /opt/homebrew/lib/libssl.dylib /opt/homebrew/lib/libcrypto.dylib /opt/homebrew/Cellar/boost/1.87.0_1/lib/libboost_system.dylib

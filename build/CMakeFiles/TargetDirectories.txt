@@ -1,0 +1,6 @@
+/Users/iljavaleev/Dev/FSMBOT/build/CMakeFiles/fsm.dir
+/Users/iljavaleev/Dev/FSMBOT/build/CMakeFiles/edit_cache.dir
+/Users/iljavaleev/Dev/FSMBOT/build/CMakeFiles/rebuild_cache.dir
+/Users/iljavaleev/Dev/FSMBOT/build/bot/CMakeFiles/bot.dir
+/Users/iljavaleev/Dev/FSMBOT/build/bot/CMakeFiles/edit_cache.dir
+/Users/iljavaleev/Dev/FSMBOT/build/bot/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libbot.a CMakeFiles/bot.dir/src/database/DB.cpp.o CMakeFiles/bot.dir/src/handlers/Handlers.cpp.o CMakeFiles/bot.dir/src/keyboards/Keyboards.cpp.o CMakeFiles/bot.dir/src/utils/Utils.cpp.o
+/usr/bin/ranlib libbot.a
