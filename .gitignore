@@ -30,3 +30,14 @@
 *.exe
 *.out
 *.app
+
+
+build/
+data/
+.env
+todo.txt
+/setup/export.sh
+/setup/mens_table.csv
+/setup/womens_table.csv
+/logs
+/setup/*.csv
