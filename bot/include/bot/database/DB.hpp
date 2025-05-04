@@ -8,16 +8,24 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <optional>
+#include <format>
 
 
-
-struct User
+struct TgUser
 {
     long id;
     std::string name;
     std::string surname;
     std::string phone_number;
     std::string email;
+
+    std::string toString()
+    {
+        return std::format(
+            "User with name is {} {}.\n Phone number: {}.\n Email: {}.\n", 
+            name, surname, phone_number, email);
+    }
 };
 
 
@@ -33,11 +41,12 @@ public:
             
         return *instance;
     }
-    std::string get(const std::string&);
+    std::optional<TgUser> get(long);
     
-    void create(const std::string&, const ::User&);
-    void update(const std::string&, const ::User&);
-    void destroy(const std::string&);
+    void transaction(const std::string&);
+    bool create(const ::TgUser&);
+    bool update(const ::TgUser&);
+    bool destroy(long);
 
     DBConnection(const DBConnection&) = delete;
     DBConnection& operator=(const DBConnection&) = delete;
@@ -60,12 +69,7 @@ private:
     std::shared_ptr<pqxx::connection> connection{nullptr};
     
     const static std::string uri; 
-    static constexpr char end_query[] = "select exercise, reps,\
-    work_id, week_id, superset from endurance where work_id=";
-    static constexpr char str_query[] = "select exercise, reps,\
-    work_id, week_id from strenght where work_id=";
-    
-    
+        
 };
 
 inline DBConnection* DBConnection::instance = nullptr;

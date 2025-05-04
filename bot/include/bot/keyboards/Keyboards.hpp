@@ -11,7 +11,8 @@ using namespace TgBot;
 namespace Keyboards
 {
     InlineKeyboardMarkup::Ptr start_register(); 
-    InlineKeyboardMarkup::Ptr register_menu();   
+    InlineKeyboardMarkup::Ptr register_menu();
+    InlineKeyboardMarkup::Ptr agreement_kb();   
 } 
 
 #endif

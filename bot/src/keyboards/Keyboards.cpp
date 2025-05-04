@@ -18,7 +18,7 @@ namespace Keyboards
         start_btn->text = "Start registration";
         start_btn->callbackData = "reg";
         row.push_back(start_btn);
-    
+        keyboard->inlineKeyboard.push_back(std::move(row));
         return keyboard;
     }
     
@@ -50,4 +50,23 @@ namespace Keyboards
         return keyboard;
     }
 
-}
+
+    InlineKeyboardMarkup::Ptr agreement_kb()
+    {
+        InlineKeyboardMarkup::Ptr keyboard(new InlineKeyboardMarkup);
+        std::vector<InlineKeyboardButton::Ptr> row;
+        
+        InlineKeyboardButton::Ptr yes_btn(new InlineKeyboardButton);
+        yes_btn->text = "Yes";
+        yes_btn->callbackData = "y";
+        row.push_back(yes_btn);
+        
+        InlineKeyboardButton::Ptr no_btn(new InlineKeyboardButton);
+        no_btn->text = "No";
+        no_btn->callbackData = "n";
+        row.push_back(no_btn);
+
+        keyboard->inlineKeyboard.push_back(std::move(row));
+        return keyboard;
+    }
+}   

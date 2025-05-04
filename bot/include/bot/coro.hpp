@@ -11,46 +11,10 @@
 #include <utility>
 #include <vector>
 #include <version>
+#include <iostream>
 
-#include "database/DB.hpp"
-
-
-namespace coro_iterator 
-{
-  template<typename PT>
-  struct iterator 
-  {
-    std::coroutine_handle<PT> coro_handle{nullptr};
-    bool done{true};
-
-    using RetType = decltype(coro_handle.promise().value);
-
-    void resume()
-    {
-      coro_handle.resume();
-      done = coro_handle.done();
-    }
-
-    iterator() = default;
-
-    iterator(std::coroutine_handle<PT> hco): coro_handle{hco}{ resume(); }
-
-    iterator& operator++()
-    {
-      resume();
-      return *this;
-    }
-
-    bool operator==(const iterator& other) const 
-    { 
-      return done == other.done; 
-    }
-
-    const RetType& operator*() const { return coro_handle.promise().value; }
-    const RetType* operator->() const { return &(operator*()); }
-
-  };
-}  // namespace coro_iterator
+#include "bot/utils/Utils.hpp"
+#include "bot/keyboards/Keyboards.hpp"
 
 
 template<typename T, typename G, typename... Bases> 
@@ -61,7 +25,7 @@ struct promise_type_base : public Bases...
     auto yield_value(T _value)
     {
         value = _value;
-        return std::suspend_never{};
+        return std::suspend_always{};
     }
 
     G get_return_object() { return G{this}; };
@@ -75,48 +39,47 @@ struct promise_type_base : public Bases...
 template<typename T>
 struct awaitable_promise_type_base 
 {
-    std::optional<T> recent_signal;
+    std::optional<T> message;
 
     struct awaiter 
     {
-        std::optional<T>& recent_signal;
+        std::optional<T>& message;
 
-        bool await_ready() const { return recent_signal.has_value(); }
+        bool await_ready() const { return message.has_value(); }
         void await_suspend(std::coroutine_handle<>) {}
 
         T await_resume()
         {
-            assert(recent_signal.has_value());
-            auto tmp = *recent_signal;
-            recent_signal.reset();
+            assert(message.has_value());
+            auto tmp = *message;
+            message.reset();
             return tmp;
         }
     };
 
-    [[nodiscard]] awaiter await_transform(T) 
-    { return awaiter{recent_signal}; }
+    awaiter await_transform(T) { return awaiter{message}; }
 };
 
 
 template<typename T, typename U>
-struct [[nodiscard]] async_generator
+struct async_generator
 {
     using promise_type = promise_type_base<T, 
                                 async_generator, 
                                 awaitable_promise_type_base<U>>;
     using PromiseTypeHandle = std::coroutine_handle<promise_type>;
 
-    T operator()()
+    T get_message()
     {
         auto tmp{std::move(coro_handle.promise().value)};
-        coro_handle.promise().value.clear();
+        coro_handle.promise().value = nullptr;
 
         return tmp;
     }
 
-    void SendSignal(U signal)
+    void send_message(U message)
     {
-        coro_handle.promise().recent_signal = signal;
+        coro_handle.promise().message = message;
         if(!coro_handle.done()) { coro_handle.resume(); }
     }
 
@@ -125,8 +88,14 @@ struct [[nodiscard]] async_generator
     : coro_handle{std::exchange(rhs.coro_handle, nullptr)}
     {}
 
+    void interrupt()
+    {
+      if(coro_handle) { coro_handle.destroy(); }
+    }
+
     ~async_generator()
     {
+        printf("END\n");
         if(coro_handle) { coro_handle.destroy(); }
     }
 
@@ -140,63 +109,80 @@ private:
 };
 
 
-template<typename T>
-struct generator 
+using FSM = async_generator<TgBot::Message::Ptr, std::string>;
+
+
+inline FSM Register(long id, std::shared_ptr<TgBot::Bot> bot)
 {
-  using promise_type      = promise_type_base<T, generator>;
-  using PromiseTypeHandle = std::coroutine_handle<promise_type>;
-  using iterator          = coro_iterator::iterator<promise_type>;
+    TgUser user(id);
+    co_yield bot->getApi().sendMessage(id,  "Enter your first name");
+    while(1)
+    {
+      std::string name = co_await std::string{};
+      if (is_valid_name(name))
+      {
+        user.name = name;
+        co_yield bot->getApi().sendMessage(id,  "Enter your last name");
+        break;
+      }
+      co_yield bot->getApi().sendMessage(id,  "Incorrect name. Try again");
+    }
+    
+    while(1)
+    {
+      std::string surname = co_await std::string{};
+      if (is_valid_name(surname))
+      {
+        user.surname = surname;
+        co_yield bot->getApi().sendMessage(id,  "Enter your phone number");
+        break;
+      }
+      co_yield bot->getApi().sendMessage(id,  "Incorrect last name. Try agin");
+    }
+    
+    while(1)
+    {
+      std::string phone_number = co_await std::string{};
+      if (is_valid_phone_number(phone_number))
+      {
+        user.phone_number = phone_number;
+        co_yield bot->getApi().sendMessage(id,  "Enter your email");
+        break;
+      }
+      co_yield bot->getApi().sendMessage(id,  "Incorrect phone number. Try agin");
+    }
+    
+    while(1)
+    {
+      std::string email = co_await std::string{};
+      if (is_valid_email(email))
+      {
+        user.email = email;
+        co_yield bot->getApi().sendMessage(id,  
+          "Consent to data processing", nullptr, nullptr, 
+          Keyboards::agreement_kb());
+        break;
+      }
+      co_yield bot->getApi().sendMessage(id,  "Incorrect email. Try agin");
+    }
+    
+    std::string agr = co_await std::string{};
 
-  iterator begin() { return {coro_handle}; }
-  iterator end() { return {}; }
-
-  generator(generator const&) = delete;
-  generator(generator&& rhs): coro_handle(rhs.coro_handle)
-  {
-        rhs.coro_handle = nullptr;
-  }
-
-  ~generator()
-  {
-        if(coro_handle) { coro_handle.destroy(); }
-  }
-
-private:
-  friend promise_type;  // #A As the default ctor is private G needs to be a friend
-  explicit generator(promise_type* p)
-  : coro_handle(PromiseTypeHandle::from_promise(*p))
-  {}
-
-  PromiseTypeHandle coro_handle;
-};
-
-
-using FSM = async_generator<std::string>;
-
-
-FSM Register(long id)
-{
-    User user(id);
-    std::string name = co_await std::string{};
-    // check
-    co_yield message;
-
-    user.name = name;
-    std::string surname = co_await std::string{};
-    user.surname = surname;
-
-    std::string phone_number = co_await std::string{};
-    user.phone_number = phone_number;
-
-    std::string email = co_await std::string{};
-    user.email = email;
-    co_yield message;
-}
-
-
-generator<byte> sender(std::vector<byte> fakeBytes)
-{
-  for(const auto& b : fakeBytes) { co_yield b; }
+    std::cout << user.toString();
+    if (agr == "y")
+    {
+      if(DBConnection::getInstance().create(std::move(user)))
+          co_yield bot->getApi().sendMessage(id,  "Registration completed",
+                  nullptr, nullptr, Keyboards::register_menu());
+      else
+        co_yield bot->getApi().sendMessage(id, "Sorry, an error occured, \
+          try again later", nullptr, nullptr, Keyboards::start_register());
+    }
+    else
+      co_yield bot->getApi().sendMessage(id,  
+        "Sorry, you must consent to the processing of data", 
+        nullptr, nullptr, Keyboards::start_register());
+    
 }
   
 

@@ -38,6 +38,14 @@
         "variant": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "bitset": "cpp",
+        "future": "cpp",
+        "unordered_set": "cpp",
+        "istream": "cpp",
+        "complex": "cpp",
+        "deque": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
     }
 }

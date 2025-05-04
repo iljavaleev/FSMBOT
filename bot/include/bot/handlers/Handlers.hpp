@@ -2,6 +2,7 @@
 #define HANDLERS_HPP
 
 #include "bot/database/UserStorage.hpp"
+#include "bot/coro.hpp"
 
 #include <string>
 
@@ -15,19 +16,24 @@ using namespace TgBot;
 
 namespace command_handlers
 {
-    class start_command{
-        const TgBot::Bot& bot;
+    class start_command
+    {
+        const std::shared_ptr<TgBot::Bot> bot;
+        std::shared_ptr<IdStorage<long>>& id_storage;
     public:
-        start_command(const TgBot::Bot& _bot):
-            bot(_bot)
+        start_command(std::shared_ptr<TgBot::Bot> _bot, 
+            std::shared_ptr<IdStorage<long>>& _s):
+            bot(_bot),
+            id_storage(_s)
             {}
         Message::Ptr operator()(const Message::Ptr&);
     };
 
-    class help_command{
-        const TgBot::Bot& bot;
+    class help_command
+    {
+        const std::shared_ptr<TgBot::Bot> bot;
     public:
-        help_command(const TgBot::Bot& _bot):
+        help_command(std::shared_ptr<TgBot::Bot> _bot):
             bot(_bot)
             {}
         Message::Ptr operator()(const Message::Ptr&);
@@ -37,26 +43,39 @@ namespace command_handlers
 
 namespace handlers
 {   
-    class inform_handler
+    class start_registration
     {
-        const TgBot::Bot& bot;
-        std::shared_ptr<Storage<long, char>>& storage;
+        const std::shared_ptr<TgBot::Bot> bot;
+        const std::shared_ptr<Storage<long, FSM>>& storage;
     public:
-        inform_handler(const TgBot::Bot& _bot, 
-            std::shared_ptr<Storage<long, char>>& s):
+        start_registration(std::shared_ptr<TgBot::Bot> _bot, 
+            std::shared_ptr<Storage<long, FSM>>& s):
             bot(_bot), 
             storage(s)
             {}
         Message::Ptr operator()(const CallbackQuery::Ptr&);
     };
 
-    class get_training
+    class end_registration
     {
-        const TgBot::Bot& bot;
-        std::shared_ptr<Storage<long, char>>& storage;
+        const std::shared_ptr<TgBot::Bot> bot;
+        const std::shared_ptr<Storage<long, FSM>>& storage;
     public:
-        get_training(const TgBot::Bot& _bot,
-            std::shared_ptr<Storage<long, char>>& s):
+        end_registration(std::shared_ptr<TgBot::Bot> _bot, 
+            std::shared_ptr<Storage<long, FSM>>& s):
+            bot(_bot), 
+            storage(s)
+            {}
+        Message::Ptr operator()(const CallbackQuery::Ptr&);
+    };
+
+    class registration
+    {
+        const std::shared_ptr<TgBot::Bot> bot;
+        const std::shared_ptr<Storage<long, FSM>>& storage;
+    public:
+        registration(std::shared_ptr<TgBot::Bot> _bot,
+            std::shared_ptr<Storage<long, FSM>>& s):
             bot(_bot), 
             storage(s)
             {}
@@ -65,9 +84,9 @@ namespace handlers
 
     class prev_next_training
     {
-        const TgBot::Bot& bot;
+        const std::shared_ptr<TgBot::Bot> bot;
     public:
-        prev_next_training(const TgBot::Bot& _bot):
+        prev_next_training(std::shared_ptr<TgBot::Bot> _bot):
             bot(_bot)
             {}
         Message::Ptr operator()(const CallbackQuery::Ptr&);
