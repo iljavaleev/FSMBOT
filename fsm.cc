@@ -20,14 +20,16 @@ int main()
     auto id_storage = std::make_shared<IdStorage<long>>();
     bot->getApi().setMyCommands(create_commands());
     bot->getEvents().onCommand("start", command_handlers::start_command(bot, id_storage));
-    // bot.getEvents().onCommand("help", command_handlers::help_command(bot));
-    
-    
-    // bot.getEvents().onCallbackQuery(handlers::prev_next_training(bot));
+   
     bot->getEvents().onCallbackQuery(handlers::start_registration(bot, storage));
-    bot->getEvents().onCallbackQuery(handlers::end_registration(bot, storage));
+    bot->getEvents().onCallbackQuery(handlers::end_registration(bot, storage, id_storage));
     bot->getEvents().onAnyMessage(handlers::registration(bot, storage));
     
+    bot->getEvents().onCallbackQuery(handlers::show_data(bot, storage, id_storage));
+    // bot->getEvents().onCallbackQuery(handlers::update_data(bot, storage, id_storage));
+    // bot->getEvents().onCallbackQuery(handlers::delete_data(bot, storage, id_storage));
+
+
     try {
         printf("Bot username: %s\n", bot->getApi().getMe()->username.c_str());
         TgBot::TgLongPoll longPoll(*bot);

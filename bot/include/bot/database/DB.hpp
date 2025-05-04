@@ -23,7 +23,7 @@ struct TgUser
     std::string toString()
     {
         return std::format(
-            "User with name is {} {}.\n Phone number: {}.\n Email: {}.\n", 
+            "User with name: {} {}.\nPhone number: {}.\nEmail: {}.\n", 
             name, surname, phone_number, email);
     }
 };

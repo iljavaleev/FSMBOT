@@ -167,8 +167,6 @@ inline FSM Register(long id, std::shared_ptr<TgBot::Bot> bot)
     }
     
     std::string agr = co_await std::string{};
-
-    std::cout << user.toString();
     if (agr == "y")
     {
       if(DBConnection::getInstance().create(std::move(user)))
@@ -185,5 +183,79 @@ inline FSM Register(long id, std::shared_ptr<TgBot::Bot> bot)
     
 }
   
+
+
+inline FSM Update(long id, std::shared_ptr<TgBot::Bot> bot)
+{
+    TgUser user = *DBConnection::getInstance().get(std::move(id));
+    while(1)
+    {
+        std::string field = co_await std::string{};
+
+        if (field == "name")
+        {
+            co_yield bot->getApi().sendMessage(id,  "Enter new name");
+            std::string name = co_await std::string{};
+            user.name = name;
+            co_yield bot->getApi().sendMessage(
+              query->message->chat->id,
+              user.toString(),
+              nullptr,
+              nullptr,
+              Keyboards::update_kb(),
+              "HTML")
+        }
+        else if (field == "surname")
+        {
+              co_yield bot->getApi().sendMessage(id,  "Enter new surname");
+              std::string surname = co_await std::string{};
+              user.surname = surname;
+              co_yield bot->getApi().sendMessage(
+                query->message->chat->id,
+                user.toString(),
+                nullptr,
+                nullptr,
+                Keyboards::update_kb(),
+                "HTML")
+        }
+        else if (field == "phone_number")
+        {
+          co_yield bot->getApi().sendMessage(id,  "Enter new phone_number");
+          std::string phone_number = co_await std::string{};
+          user.phone_number = phone_number;
+          co_yield bot->getApi().sendMessage(
+            query->message->chat->id,
+            user.toString(),
+            nullptr,
+            nullptr,
+            Keyboards::update_kb(),
+            "HTML")
+        }
+        else if (field == "email")    
+        {
+              co_yield bot->getApi().sendMessage(id,  "Enter new phone_number");
+              std::string email = co_await std::string{};
+              user.email = email;
+              co_yield bot->getApi().sendMessage(
+                query->message->chat->id,
+                user.toString(),
+                nullptr,
+                nullptr,
+                Keyboards::update_kb(),
+                "HTML")
+        }
+        else if (field == "exit")
+        {
+            if (DBConnection::getInstance().update(user))
+              co_yield bot->getApi().sendMessage(id,  "Update completed",
+              nullptr, nullptr, Keyboards::register_menu())
+            else
+              co_yield bot->getApi().sendMessage(id,  
+                "Sorry, try again later", 
+                nullptr, nullptr, Keyboards::update_kb());
+            break;
+        }
+    }
+}
 
 #endif

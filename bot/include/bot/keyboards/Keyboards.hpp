@@ -13,6 +13,7 @@ namespace Keyboards
     InlineKeyboardMarkup::Ptr start_register(); 
     InlineKeyboardMarkup::Ptr register_menu();
     InlineKeyboardMarkup::Ptr agreement_kb();   
+    InlineKeyboardMarkup::Ptr update_kb();
 } 
 
 #endif

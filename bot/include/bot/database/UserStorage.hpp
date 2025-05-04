@@ -53,7 +53,6 @@ void Storage<K, V>::set(K key, V value)
     storage.insert({key, std::make_shared<V>(std::move(value))});
 }
 
-
 template<typename K>
 struct IdStorage
 {
@@ -68,7 +67,11 @@ bool IdStorage<K>::exist(K key)
     if (auto res = storage.find(key); res != storage.end())
         return 1;
     if (DBConnection::getInstance().get(key))
+    {
+        add(key);
         return 1;
+    }
+        
     return 0;
 }
 

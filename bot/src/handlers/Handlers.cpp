@@ -108,6 +108,9 @@ namespace handlers
         {
             fsm_ptr->send_message(query->data);
             storage->destroy(query->message->chat->id);
+            Message::Ptr msg = fsm_ptr->get_message();
+            if (StringTools::startsWith(msg->text, "Registration"))
+                id_storage->add(query->message->chat->id);
             return fsm_ptr->get_message();
         }
         catch(const std::exception& e)
@@ -137,7 +140,80 @@ namespace handlers
         return Message::Ptr(nullptr); 
     }
  
-    Message::Ptr prev_next_training::operator()(const CallbackQuery::Ptr& query)
+    Message::Ptr show_data::operator()(const CallbackQuery::Ptr& query)
+    {
+        if (query->data != "get" || !id_storage->exist(query->message->chat->id))
+            return Message::Ptr(nullptr);
+        auto maybe_user = DBConnection::getInstance().get(query->message->chat->id);
+        if (!maybe_user) return Message::Ptr(nullptr);
+        
+        try
+        {
+            return bot->getApi().sendMessage(
+                query->message->chat->id, 
+                (*maybe_user).toString());
+        }
+        catch(const std::exception& e)
+        {
+            printf("%s\n", e.what());
+        }
+        return Message::Ptr(nullptr);
+    }
+
+
+    Message::Ptr start_update_data::operator()(const CallbackQuery::Ptr& query)
+    {
+        
+        if (query->data != "start_update" || 
+            !id_storage->exist(query->message->chat->id))
+            return Message::Ptr(nullptr);
+        
+        try
+        {
+            return bot->getApi().sendMessage(
+                query->message->chat->id,
+                "Choose field to update",
+                nullptr,
+                nullptr,
+                Keyboards::update_kb(),
+                "HTML"
+            )
+        }
+        catch(const std::exception& e)
+        {
+            printf("%s\n", e.what());
+        }
+        return Message::Ptr(nullptr);
+    }
+
+    Message::Ptr update_data::operator()(const CallbackQuery::Ptr& query)
+    {
+        
+        if (!StringTools::startsWith(query->data, "update") || 
+            !id_storage->exist(query->message->chat->id))
+            return Message::Ptr(nullptr);
+    
+        auto part = StringTools::split(query->data, ' ').at(1);
+        try
+        {
+            return bot->getApi().sendMessage(
+                query->message->chat->id,
+                "Choose field to update",
+                nullptr,
+                nullptr,
+                Keyboards::update_kb(),
+                "HTML"
+            )
+        }
+        catch(const std::exception& e)
+        {
+            printf("%s\n", e.what());
+        }
+        return Message::Ptr(nullptr);
+    }
+
+
+    Message::Ptr delete_data::operator()(const CallbackQuery::Ptr& query)
     {
         
         return Message::Ptr(nullptr); 
