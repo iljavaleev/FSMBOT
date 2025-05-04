@@ -36,7 +36,10 @@ template<typename K, typename V>
 void Storage<K, V>::destroy(K key)
 {   
     if (storage.contains(key))
+    {
         storage.erase(key);
+    }
+        
 }
 
 template<typename K, typename V> 
@@ -59,6 +62,7 @@ struct IdStorage
     std::unordered_set<K> storage;
     bool exist(K key);
     void add(K key);
+    void destroy(K key);
 };
 
 template<typename K> 
@@ -88,6 +92,16 @@ void IdStorage<K>::add(K key)
         storage.clear();
 
     storage.insert(key);
+}
+
+template<typename K> 
+void IdStorage<K>::destroy(K key)
+{   
+    if (storage.contains(key))
+    {
+        storage.erase(key);
+    }
+        
 }
 
 #endif

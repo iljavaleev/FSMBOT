@@ -8,6 +8,9 @@
 
 using namespace TgBot;
 
+/*
+    mock validation
+*/
 
 bool is_valid_name(const std::string& name)
 {

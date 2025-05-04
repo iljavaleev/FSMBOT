@@ -167,7 +167,8 @@ namespace handlers
         if (query->data != "start_update" || 
             !id_storage->exist(query->message->chat->id))
             return Message::Ptr(nullptr);
-        
+        update_storage->set(query->message->chat->id, 
+            UpdateCoro(query->message->chat->id, bot));
         try
         {
             return bot->getApi().sendMessage(
@@ -177,7 +178,7 @@ namespace handlers
                 nullptr,
                 Keyboards::update_kb(),
                 "HTML"
-            )
+            );
         }
         catch(const std::exception& e)
         {
@@ -189,21 +190,43 @@ namespace handlers
     Message::Ptr update_data::operator()(const CallbackQuery::Ptr& query)
     {
         
-        if (!StringTools::startsWith(query->data, "update") || 
-            !id_storage->exist(query->message->chat->id))
+        if (!update_storage->exist(query->message->chat->id))
             return Message::Ptr(nullptr);
     
         auto part = StringTools::split(query->data, ' ').at(1);
+        auto fsm = update_storage->get(query->message->chat->id);
+        if (!fsm)
+            return Message::Ptr(nullptr);
+        
         try
         {
-            return bot->getApi().sendMessage(
-                query->message->chat->id,
-                "Choose field to update",
-                nullptr,
-                nullptr,
-                Keyboards::update_kb(),
-                "HTML"
-            )
+            if (part == "exit")
+            {
+                update_storage->destroy(query->message->chat->id);
+            }
+            fsm->send_message(std::move(part));
+            return fsm->get_message();
+        }
+        catch(const std::exception& e)
+        {
+            printf("%s\n", e.what());
+        }
+        return Message::Ptr(nullptr);
+    }
+
+    Message::Ptr update_data_message::operator()(const Message::Ptr& message)
+    {
+        
+        if (!update_storage->exist(message->chat->id))
+            return Message::Ptr(nullptr);
+    
+        auto fsm = update_storage->get(message->chat->id);
+        if (!fsm)
+            return Message::Ptr(nullptr);
+        try
+        {
+            fsm->send_message(std::move(message->text));
+            return fsm->get_message();
         }
         catch(const std::exception& e)
         {
@@ -215,7 +238,31 @@ namespace handlers
 
     Message::Ptr delete_data::operator()(const CallbackQuery::Ptr& query)
     {
+        if (query->data != "delete" || 
+            !id_storage->exist(query->message->chat->id))
+            return Message::Ptr(nullptr);
         
+        id_storage->destroy(query->message->chat->id);
+        std::string msg = "You have successfully deleted the data";
+        if (!DBConnection::getInstance().destroy(query->message->chat->id))
+        {
+            msg = "Sorry, an error occured, try again later";
+        }
+        try
+        {
+            return bot->getApi().sendMessage(
+                query->message->chat->id,
+                std::move(msg),
+                nullptr,
+                nullptr,
+                Keyboards::start_register(),
+                "HTML"
+            );
+        }
+        catch(const std::exception& e)
+        {
+            printf("%s\n", e.what());
+        }
         return Message::Ptr(nullptr); 
     }
 

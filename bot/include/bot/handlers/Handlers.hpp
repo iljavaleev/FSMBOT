@@ -88,14 +88,11 @@ namespace handlers
     class show_data
     {
         const std::shared_ptr<TgBot::Bot> bot;
-        const std::shared_ptr<Storage<long, FSM>>& storage;
         std::shared_ptr<IdStorage<long>>& id_storage;
     public:
         show_data(std::shared_ptr<TgBot::Bot> _bot, 
-            std::shared_ptr<Storage<long, FSM>>& s, 
             std::shared_ptr<IdStorage<long>>& _id_storage):
             bot(_bot), 
-            storage(s),
             id_storage(_id_storage)
             {}
         Message::Ptr operator()(const CallbackQuery::Ptr&);
@@ -104,11 +101,14 @@ namespace handlers
     class start_update_data
     {
         const std::shared_ptr<TgBot::Bot> bot;
+        const std::shared_ptr<Storage<long, FSM>>& update_storage;
         std::shared_ptr<IdStorage<long>>& id_storage;
     public:
         start_update_data(std::shared_ptr<TgBot::Bot> _bot, 
+            std::shared_ptr<Storage<long, FSM>>& s, 
             std::shared_ptr<IdStorage<long>>& _id_storage):
-            bot(_bot),
+            bot(_bot), 
+            update_storage(s),
             id_storage(_id_storage)
             {}
         Message::Ptr operator()(const CallbackQuery::Ptr&);
@@ -117,30 +117,37 @@ namespace handlers
     class update_data
     {
         const std::shared_ptr<TgBot::Bot> bot;
-        const std::shared_ptr<Storage<long, FSM>>& storage;
-        std::shared_ptr<IdStorage<long>>& id_storage;
+        const std::shared_ptr<Storage<long, FSM>>& update_storage;
     public:
         update_data(std::shared_ptr<TgBot::Bot> _bot, 
-            std::shared_ptr<Storage<long, FSM>>& s, 
-            std::shared_ptr<IdStorage<long>>& _id_storage):
+            std::shared_ptr<Storage<long, FSM>>& s):
             bot(_bot), 
-            storage(s),
-            id_storage(_id_storage)
+            update_storage(s)
             {}
         Message::Ptr operator()(const CallbackQuery::Ptr&);
+    };
+
+    class update_data_message
+    {
+        const std::shared_ptr<TgBot::Bot> bot;
+        const std::shared_ptr<Storage<long, FSM>>& update_storage;
+    public:
+        update_data_message(std::shared_ptr<TgBot::Bot> _bot, 
+            std::shared_ptr<Storage<long, FSM>>& s):
+            bot(_bot), 
+            update_storage(s)
+            {}
+        Message::Ptr operator()(const Message::Ptr& message);
     };
 
     class delete_data
     {
         const std::shared_ptr<TgBot::Bot> bot;
-        const std::shared_ptr<Storage<long, FSM>>& storage;
         std::shared_ptr<IdStorage<long>>& id_storage;
     public:
         delete_data(std::shared_ptr<TgBot::Bot> _bot, 
-            std::shared_ptr<Storage<long, FSM>>& s, 
             std::shared_ptr<IdStorage<long>>& _id_storage):
             bot(_bot), 
-            storage(s),
             id_storage(_id_storage)
             {}
         Message::Ptr operator()(const CallbackQuery::Ptr&);

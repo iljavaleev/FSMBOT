@@ -104,9 +104,8 @@ bool DBConnection::update(const TgUser& user)
 bool DBConnection::destroy(long id)
 {
     std::string query = std::format(
-        "delete from botuser where idid={}", 
-        id
-    );
+        "delete from botuser where id={}", 
+        id);
     try
     {
         transaction(std::move(query));

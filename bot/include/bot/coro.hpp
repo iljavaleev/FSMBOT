@@ -62,10 +62,10 @@ struct awaitable_promise_type_base
 
 
 template<typename T, typename U>
-struct async_generator
+struct generator
 {
     using promise_type = promise_type_base<T, 
-                                async_generator, 
+                                generator, 
                                 awaitable_promise_type_base<U>>;
     using PromiseTypeHandle = std::coroutine_handle<promise_type>;
 
@@ -83,8 +83,8 @@ struct async_generator
         if(!coro_handle.done()) { coro_handle.resume(); }
     }
 
-    async_generator(const async_generator&) = delete;
-    async_generator(async_generator&& rhs)
+    generator(const generator&) = delete;
+    generator(generator&& rhs)
     : coro_handle{std::exchange(rhs.coro_handle, nullptr)}
     {}
 
@@ -93,15 +93,14 @@ struct async_generator
       if(coro_handle) { coro_handle.destroy(); }
     }
 
-    ~async_generator()
+    ~generator()
     {
-        printf("END\n");
         if(coro_handle) { coro_handle.destroy(); }
     }
 
 private:
     friend promise_type; 
-    explicit async_generator(promise_type* p)
+    explicit generator(promise_type* p)
     : coro_handle(PromiseTypeHandle::from_promise(*p))
     {}
 
@@ -109,7 +108,7 @@ private:
 };
 
 
-using FSM = async_generator<TgBot::Message::Ptr, std::string>;
+using FSM = generator<TgBot::Message::Ptr, std::string>;
 
 
 inline FSM Register(long id, std::shared_ptr<TgBot::Bot> bot)
@@ -184,8 +183,7 @@ inline FSM Register(long id, std::shared_ptr<TgBot::Bot> bot)
 }
   
 
-
-inline FSM Update(long id, std::shared_ptr<TgBot::Bot> bot)
+inline FSM UpdateCoro(long id, std::shared_ptr<TgBot::Bot> bot)
 {
     TgUser user = *DBConnection::getInstance().get(std::move(id));
     while(1)
@@ -198,12 +196,12 @@ inline FSM Update(long id, std::shared_ptr<TgBot::Bot> bot)
             std::string name = co_await std::string{};
             user.name = name;
             co_yield bot->getApi().sendMessage(
-              query->message->chat->id,
+              id,
               user.toString(),
               nullptr,
               nullptr,
               Keyboards::update_kb(),
-              "HTML")
+              "HTML");
         }
         else if (field == "surname")
         {
@@ -211,12 +209,12 @@ inline FSM Update(long id, std::shared_ptr<TgBot::Bot> bot)
               std::string surname = co_await std::string{};
               user.surname = surname;
               co_yield bot->getApi().sendMessage(
-                query->message->chat->id,
+                id,
                 user.toString(),
                 nullptr,
                 nullptr,
                 Keyboards::update_kb(),
-                "HTML")
+                "HTML");
         }
         else if (field == "phone_number")
         {
@@ -224,12 +222,12 @@ inline FSM Update(long id, std::shared_ptr<TgBot::Bot> bot)
           std::string phone_number = co_await std::string{};
           user.phone_number = phone_number;
           co_yield bot->getApi().sendMessage(
-            query->message->chat->id,
+            id,
             user.toString(),
             nullptr,
             nullptr,
             Keyboards::update_kb(),
-            "HTML")
+            "HTML");
         }
         else if (field == "email")    
         {
@@ -237,22 +235,26 @@ inline FSM Update(long id, std::shared_ptr<TgBot::Bot> bot)
               std::string email = co_await std::string{};
               user.email = email;
               co_yield bot->getApi().sendMessage(
-                query->message->chat->id,
+                id,
                 user.toString(),
                 nullptr,
                 nullptr,
                 Keyboards::update_kb(),
-                "HTML")
+                "HTML");
         }
         else if (field == "exit")
         {
             if (DBConnection::getInstance().update(user))
+            {
               co_yield bot->getApi().sendMessage(id,  "Update completed",
-              nullptr, nullptr, Keyboards::register_menu())
+                nullptr, nullptr, Keyboards::register_menu());
+            }
             else
+            {
               co_yield bot->getApi().sendMessage(id,  
                 "Sorry, try again later", 
                 nullptr, nullptr, Keyboards::update_kb());
+            }
             break;
         }
     }
